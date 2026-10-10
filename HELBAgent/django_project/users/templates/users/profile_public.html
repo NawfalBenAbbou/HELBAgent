@@ -1,0 +1,63 @@
+{% extends "blog/base.html" %}
+{% block content %}
+    <div class="content-section">
+      <div class="media">
+        <img class="rounded-circle account-img" src="{{ target_user.profile.image.url }}">
+        <div class="media-body">
+          <h2 class="account-heading">{{ target_user.username }}</h2>
+          <p class="text-secondary">{{ target_user.email }}</p>
+          </div>
+      </div>
+    </div>
+
+    <div class="content-section" style="margin-top: 20px;">
+        <h3>Public Statistics</h3>
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+                <canvas id="publicAgentChart" style="width:100%; height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0"></script>
+
+    <script>
+        // recup des donnees pour graph
+        const xValuesA = {{ agent_names|safe }};
+        const yValuesA = {{ agent_counts|safe }};
+
+        const ctxA = document.getElementById('publicAgentChart');
+        const barColors = ["red", "green", "blue", "orange", "brown"];
+        
+        //  boucle les couleurs
+        const dynamicColors = [];
+        for (let i = 0; i < xValuesA.length; i++) {
+            dynamicColors.push(barColors[i % barColors.length]);
+        }
+
+        new Chart(ctxA, {
+          type: "bar",
+          data: {
+            labels: xValuesA,
+            datasets: [{
+              backgroundColor: dynamicColors,
+              data: yValuesA
+            }]
+          },
+          options: {
+            plugins: {
+              legend: {display: false},
+              title: {
+                display: true,
+                text: "Messages sent by {{ target_user.username }}",
+                font: {size: 16}
+              }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+    </script>
+{% endblock content %}

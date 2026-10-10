@@ -1,0 +1,82 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="content-section">
+    <h2 class="mb-4"> HELPlays - Yu-Gi-Oh!</h2>
+    
+    {% if error_msg %}
+    <div class="alert alert-danger">{{ error_msg }}</div>
+    {% endif %}
+    
+    {% if success_msg %}
+    <div class="alert alert-success">{{ success_msg }}</div>
+    {% endif %}
+    
+    <!-- Image du jeu -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"> Game Frame</h5>
+        </div>
+        <div class="card-body text-center">
+            <img id="game-frame" 
+                 src="{{ frame_url }}" 
+                 alt="Game Frame" 
+                 class="img-fluid border rounded shadow"
+                 style="max-width: 100%; height: auto;">
+            
+        </div>
+    </div>
+    
+    
+    <!-- Chat -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"> Chat</h5>
+        </div>
+        <div class="card-body">
+            <div id="helb-chat" class="border rounded p-3 bg-light" 
+                style="min-height: 250px; max-height: 450px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; font-size: 14px;">
+                {{ chat_content }}
+            </div>
+            
+        </div>
+    </div>
+
+    
+    <!-- Formulaire du message-->
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"> Send Message</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{% url 'helbplays' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="message" 
+                              class="form-control" 
+                              rows="4" 
+                              placeholder="Type your message..." 
+                              required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                     Send
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    setInterval(function() {
+        fetch("{% url 'helbplays-chat-poll' %}")
+            .then(r => r.text())
+            .then(text => {
+                const el = document.getElementById("helb-chat");
+                el.textContent = text;
+                el.scrollTop = el.scrollHeight;
+            });
+    }, 2000);
+</script>
+
+
+{% endblock content %}

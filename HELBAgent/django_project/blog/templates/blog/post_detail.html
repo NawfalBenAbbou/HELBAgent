@@ -1,0 +1,92 @@
+{% extends "blog/base.html" %}
+{% block content %}
+    <!-- Infos de l'agent -->
+    <article class="media content-section">
+      <img class="rounded-circle article-img" src="{{ object.profile_picture.url }}">
+      <div class="media-body">
+        <div class="article-metadata">
+          <a class="mr-2" href="#">{{ object.author }}</a>
+          <small class="text-muted">{{ object.date_posted|date:"F d, Y" }}</small>
+          {% if object.author == user %}
+            <div>
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'post-update' object.id %}">Update</a>
+                <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'post-delete' object.id %}">Delete</a>
+            </div>
+          {% endif %}
+        </div>
+        <h2 class="article-title">{{ object.title }}</h2>
+        <p class="article-content">{{ object.content }}</p>
+        <p ><strong>System Prompt:</strong>{{ post.prompt }}</p>
+        <p>
+            <span class="badge badge-info">{{ object.get_type_AI_display }}</span>
+            <span class="badge badge-dark "> Cooldown: {{ object.cooldown }}s</span>
+        </p>
+      </div>
+    </article>
+    <!-- Zone de chat -->
+    <div class="content-section">
+        <h3>Conversations</h3>
+        <div class="chat-window" id="chat-window">
+            {% for message in chat_messages %}
+                {% if message.is_AgentAi %}
+
+                <div class="alert alert-secondary">
+                    
+                    {{ message.content }}
+                </div>
+                {% else %}
+                <div class="alert alert-primary text-right">
+                    
+                    <span class="message">{{ message.content }}</span>
+                </div>
+                {% endif %}
+            {% empty %}
+                <p>No messages yet. Start the conversation!</p>
+            {% endfor %}
+        </div>
+        <form method="POST">
+            {% csrf_token %} <div class="form-group">
+                <input type="text" name="content" class="form-control" placeholder="Type your message..." required>
+            </div>
+            <button class="btn btn-outline-info" type="submit">Send</button>
+        </form>
+    </div>
+    <script>
+        // rend les usernames cliquables au chargement
+        document.addEventListener("DOMContentLoaded", function() {
+            const elements = document.querySelectorAll('.message');
+            elements.forEach(el => {
+                let text = el.innerText;
+                let separatorIndex = text.indexOf(' (');
+                if (separatorIndex > 0) {
+                    let username = text.substring(0, separatorIndex);
+                    let rest = text.substring(separatorIndex);
+                    el.innerHTML = `<a href="/profile/${username}/" style="color: inherit; font-weight: bold; text-decoration: underline;">${username}</a>${rest}`;
+                }
+            });
+        });
+        // refresh auto du chat toutes les 2sec
+        setInterval(function() {
+            fetch("{% url 'post-chat-poll' object.id %}")
+                .then(r => r.text())
+                .then(html => {
+                    const chatWindow = document.getElementById("chat-window");
+                    chatWindow.innerHTML = html;
+                    
+                    // refait les liens apres le refresh
+                    document.querySelectorAll('.message').forEach(el => {
+                        let text = el.innerText;
+                        let idx = text.indexOf(' (');
+                        if (idx > 0) {
+                            let user = text.substring(0, idx);
+                            let rest = text.substring(idx);
+                            el.innerHTML = `<a href="/profile/${user}/" style="color:inherit;font-weight:bold;text-decoration:underline">${user}</a>${rest}`;
+                        }
+                    });
+                    
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                });
+        }, 2000);
+    </script>
+
+{% endblock content %}
